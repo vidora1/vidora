@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vidora - YouTube Edition</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f9f9f9; --card-bg: #ffffff; --text-color: #0f0f0f;
+            --accent-color: #ff0000; --gray-text: #606060; --border-color: #e5e5e5;
+            --hover-color: #f2f2f2;
+        }
+        [data-theme="dark"] {
+            --bg-color: #0f0f0f; --card-bg: #1e1e1e; --text-color: #ffffff;
+            --gray-text: #aaaaaa; --border-color: #333333; --hover-color: #2a2a2a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 80px; transition: 0.3s; overflow-x: hidden; }
+
+        /* Header */
+        header {
+            position: fixed; top: 0; width: 100%; height: 60px;
+            background: var(--card-bg); display: flex; align-items: center;
+            justify-content: space-between; padding: 0 15px; z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .logo-img { height: 30px; cursor: pointer; }
+        .search-box-container {
+            display: flex; align-items: center; flex: 1; margin: 0 10px;
+        }
+        .search-box { 
+            display: flex; align-items: center; background: var(--bg-color); 
+            border-radius: 20px; padding: 5px 15px; flex: 1;
+            border: 1px solid var(--border-color);
+        }
+        .search-box input { background: transparent; border: none; outline: none; color: var(--text-color); width: 100%; padding: 5px; }
+
+        /* Navigation */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; height: 70px;
+            background: var(--card-bg); display: flex; justify-content: space-around;
+            align-items: center; border-top: 1px solid var(--border-color); z-index: 1000;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--gray-text); font-size: 11px; flex: 1; gap: 4px; }
+        .nav-item.active { color: var(--accent-color); }
+        .nav-item i { font-size: 20px; }
+
+        /* Main Content */
+        main { padding: 75px 15px 20px 15px; max-width: 1200px; margin: 0 auto; }
+        
+        /* Video Card - Enhanced */
+        .video-card { 
+            background: var(--card-bg); border-radius: 12px; overflow: hidden; 
+            margin-bottom: 20px; border: 1px solid var(--border-color); 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .video-card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .thumb-box { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
+        .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+        .card-info { padding: 12px; display: flex; gap: 12px; }
+        .channel-icon { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+        .channel-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .video-details { flex: 1; }
+        .video-details h3 { font-size: 15px; font-weight: 500; line-height: 1.4; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .channel-name { font-size: 13px; color: var(--gray-text); margin-bottom: 2px; }
+        .video-stats { font-size: 12px; color: var(--gray-text); display: flex; align-items: center; gap: 8px; }
+        
+        /* Video Duration */
+        .video-duration { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.8); color: white; padding: 2px 5px; font-size: 10px; border-radius: 4px; }
+        
+        /* Grid Layout for Search Results */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        /* Channel Card */
+        .channel-card {
+            background: var(--card-bg); border-radius: 12px; overflow: hidden;
+            border: 1px solid var(--border-color); padding: 20px;
+            display: flex; align-items: center; gap: 15px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .channel-card:hover {
+            background: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .channel-avatar-large { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+        .channel-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+        .channel-info { flex: 1; }
+        .channel-info h3 { font-size: 18px; font-weight: 600; margin-bottom: 5px; }
+        .channel-stats { font-size: 13px; color: var(--gray-text); margin-bottom: 8px; }
+        .channel-description { font-size: 13px; color: var(--gray-text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        /* Playlist Card */
+        .playlist-card {
+            background: var(--card-bg); border-radius: 12px; overflow: hidden;
+            border: 1px solid var(--border-color); cursor: pointer;
+            transition: all 0.2s;
+        }
+        .playlist-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .playlist-thumb { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
+        .playlist-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .playlist-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; }
+        .playlist-count { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; font-size: 11px; border-radius: 4px; }
+        .playlist-info { padding: 12px; }
+        .playlist-info h3 { font-size: 15px; font-weight: 500; line-height: 1.4; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .playlist-author { font-size: 13px; color: var(--gray-text); margin-bottom: 2px; }
+        .playlist-stats { font-size: 12px; color: var(--gray-text); }
+        
+        /* Filter Buttons - Improved */
+        .filter-buttons {
+            display: flex; gap: 10px; overflow-x: auto; padding: 15px 0;
+            margin-bottom: 20px; scrollbar-width: none;
+            position: sticky; top: 60px; background: var(--bg-color); z-index: 900;
+        }
+        .filter-buttons::-webkit-scrollbar { display: none; }
+        .filter-btn { 
+            padding: 8px 16px; background: var(--card-bg); 
+            border: 1px solid var(--border-color); border-radius: 20px; 
+            color: var(--text-color); cursor: pointer; white-space: nowrap;
+            transition: all 0.2s; font-size: 13px;
+        }
+        .filter-btn:hover { background: var(--hover-color); }
+        .filter-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+        
+        /* Search Type Tabs */
+        .search-type-tabs {
+            display: flex; gap: 1px; background: var(--border-color); 
+            border-radius: 8px; overflow: hidden; margin-bottom: 20px;
+        }
+        .search-type-tab {
+            flex: 1; padding: 12px; background: var(--card-bg); 
+            border: none; color: var(--text-color); cursor: pointer;
+            font-size: 14px; transition: all 0.2s; text-align: center;
+        }
+        .search-type-tab:hover { background: var(--hover-color); }
+        .search-type-tab.active { background: var(--accent-color); color: white; }
+        
+        /* Results Header */
+        .results-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 15px;
+            border-bottom: 2px solid var(--accent-color);
+        }
+        .results-count { font-size: 14px; color: var(--gray-text); }
+        
+        /* Load More Button */
+        .load-more {
+            text-align: center; margin-top: 30px; padding: 15px;
+        }
+        .load-more-btn {
+            padding: 12px 30px; background: var(--accent-color); color: white;
+            border: none; border-radius: 25px; cursor: pointer;
+            font-size: 14px; font-weight: 600; transition: all 0.2s;
+        }
+        .load-more-btn:hover { background: #cc0000; transform: translateY(-2px); }
+        .load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Player Controls - Improved Layout */
+        .player-view { display: none; }
+        .player-header { 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 15px 0; border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+        .back-btn { 
+            background: none; border: none; color: var(--text-color); 
+            font-size: 24px; cursor: pointer; padding: 5px 10px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .main-player-frame { 
+            width: 100%; aspect-ratio: 16/9; border-radius: 12px; 
+            overflow: hidden; background: #000; margin-bottom: 15px;
+        }
+        .main-player-frame iframe { width: 100%; height: 100%; border: none; }
+        
+        /* Unified Player Actions Container */
+        .player-actions-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .player-action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 5px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 70px;
+            width: 100%;
+        }
+        
+        .player-action-btn:hover {
+            background: var(--hover-color);
+            transform: translateY(-2px);
+        }
+        
+        .player-action-btn.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        
+        .player-action-btn i {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .player-action-btn span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        /* Like/Dislike specific styling */
+        .player-action-btn.like-btn.active {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .player-action-btn.dislike-btn.active {
+            background: #606060;
+            color: white;
+            border-color: #606060;
+        }
+        
+        @media (max-width: 768px) {
+            .player-actions-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .player-action-btn {
+                min-height: 65px;
+                padding: 10px 5px;
+            }
+            
+            .player-action-btn i {
+                font-size: 18px;
+            }
+            
+            .player-action-btn span {
+                font-size: 11px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .player-actions-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+            
+            .player-action-btn {
+                min-height: 60px;
+                padding: 8px 4px;
+            }
+            
+            .player-action-btn i {
+                font-size: 16px;
+            }
+            
+            .player-action-btn span {
+                font-size: 10px;
+            }
+        }
+        
+        /* Related Videos */
+        .related-section { margin-top: 30px; }
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--accent-color); }
+        .related-videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .related-card { background: var(--card-bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); cursor: pointer; }
+        .related-thumb { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
+        .related-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .related-info { padding: 10px; }
+        .related-title { font-size: 13px; font-weight: 500; line-height: 1.4; height: 2.8em; overflow: hidden; }
+        
+        /* Loading Animation */
+        .loading { text-align: center; padding: 40px; }
+        .loading-spinner { width: 40px; height: 40px; border: 3px solid var(--border-color); border-top-color: var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Empty State */
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-text); }
+        .empty-state i { font-size: 48px; margin-bottom: 15px; color: var(--border-color); }
+        
+        /* Modals */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; }
+        .row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border-color); }
+        
+        /* Status Messages */
+        .status-msg { text-align: center; padding: 50px; color: var(--gray-text); font-size: 14px; }
+        .hidden { display: none !important; }
+        
+        /* Channel Info in Player */
+        .channel-info { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+        .channel-avatar { width: 50px; height: 50px; border-radius: 50%; overflow: hidden; margin-left: 10px; }
+        .channel-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .channel-name { font-weight: 600; font-size: 16px; }
+        .channel-subscribers { font-size: 12px; color: var(--gray-text); }
+        
+        /* Made By Section */
+        .made-by { text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); color: var(--gray-text); font-size: 12px; }
+    </style>
+</head>
+<body data-theme="light">
+
+    <header>
+        <img src="logo.png" class="logo-img" alt="Vidora" onclick="goTab('home', document.querySelector('.nav-item'))" onerror="this.src='https://via.placeholder.com/120x40/ff0000/ffffff?text=Vidora'">
+        <div class="search-box-container">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="بحث..." onkeypress="if(event.key === 'Enter') doSearch()">
+            </div>
+        </div>
+    </header>
+
+    <main id="content">
+        <!-- Home/Results View -->
+        <div id="home-view">
+            <div class="filter-buttons">
+                <button class="filter-btn" onclick="changeCategory('gaming', this)">🎮 ألعاب</button>
+                <button class="filter-btn" onclick="changeCategory('trending', this)">🔥 رائج</button>
+                <button class="filter-btn" onclick="changeCategory('entertainment', this)">🎬 ترفيه</button>
+                <button class="filter-btn" onclick="changeCategory('music', this)">🎵 موسيقى</button>
+                <button class="filter-btn" onclick="changeCategory('technology', this)">💻 تكنولوجيا</button>
+                <button class="filter-btn" onclick="changeCategory('suggested', this)">✨ مقترح لك</button>
+                <button class="filter-btn" onclick="changeCategory('news', this)">📰 أخبار</button>
+            </div>
+            
+            <!-- Search Type Tabs -->
+            <div class="search-type-tabs" id="searchTypeTabs" style="display: none;">
+                <button class="search-type-tab active" onclick="changeSearchType('all', this)">الكل</button>
+                <button class="search-type-tab" onclick="changeSearchType('video', this)">فيديوهات</button>
+                <button class="search-type-tab" onclick="changeSearchType('channel', this)">قنوات</button>
+                <button class="search-type-tab" onclick="changeSearchType('playlist', this)">قوائم التشغيل</button>
+            </div>
+            
+            <!-- Results Header -->
+            <div class="results-header" id="resultsHeader" style="display: none;">
+                <h2 id="resultsTitle">نتائج البحث</h2>
+                <div class="results-count" id="resultsCount"></div>
+            </div>
+            
+            <!-- Results Grid -->
+            <div id="main-grid">
+                <div class="status-msg" id="loader">جاري تحميل الفيديوهات...</div>
+            </div>
+            
+            <!-- Load More Button -->
+            <div class="load-more" id="loadMoreContainer" style="display: none;">
+                <button class="load-more-btn" onclick="loadMoreResults()" id="loadMoreBtn">تحميل المزيد</button>
+            </div>
+        </div>
+
+        <!-- Player View -->
+        <div id="player-view" class="player-view">
+            <div class="player-header">
+                <button class="back-btn" onclick="goBack()">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>رجوع</span>
+                </button>
+                <h3 style="font-size: 16px; font-weight: 600; text-align: center; flex: 1;">مشاهدة الفيديو</h3>
+                <div style="width: 80px;"></div>
+            </div>
+            
+            <div class="main-player-frame" id="yt-player-container"></div>
+            
+            <!-- Unified Player Actions Container -->
+            <div class="player-actions-container">
+                <button class="player-action-btn like-btn" onclick="toggleLike(this)" id="likeBtn">
+                    <i class="fas fa-thumbs-up"></i>
+                    <span>إعجاب</span>
+                </button>
+                
+                <button class="player-action-btn dislike-btn" onclick="toggleDislike(this)" id="dislikeBtn">
+                    <i class="fas fa-thumbs-down"></i>
+                    <span>عدم إعجاب</span>
+                </button>
+                
+                <button class="player-action-btn" onclick="playNextVideo()">
+                    <i class="fas fa-forward"></i>
+                    <span>التالي</span>
+                </button>
+                
+                <button class="player-action-btn" onclick="downloadVideo()">
+                    <i class="fas fa-download"></i>
+                    <span>تحميل</span>
+                </button>
+            </div>
+            
+            <h2 id="v-title" style="padding:15px 0; font-size:18px; line-height:1.4;"></h2>
+            <div id="channel-container"></div>
+            
+            <div class="related-section">
+                <div class="section-title">فيديوهات ذات صلة</div>
+                <div id="related-videos" class="related-videos">
+                    <div class="status-msg">جاري تحميل الفيديوهات...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Channel View (Hidden by default) -->
+    <div id="channel-view" style="display: none;">
+        <div style="padding: 75px 15px 20px;">
+            <button class="back-btn" onclick="goBackFromChannel()" style="margin-bottom: 20px;">
+                <i class="fas fa-arrow-right"></i> رجوع
+            </button>
+            <div id="channel-header"></div>
+            <div class="section-title" id="channel-videos-title">فيديوهات القناة</div>
+            <div id="channel-videos" class="results-grid"></div>
+        </div>
+    </div>
+
+    <!-- Playlist View (Hidden by default) -->
+    <div id="playlist-view" style="display: none;">
+        <div style="padding: 75px 15px 20px;">
+            <button class="back-btn" onclick="goBackFromPlaylist()" style="margin-bottom: 20px;">
+                <i class="fas fa-arrow-right"></i> رجوع
+            </button>
+            <div id="playlist-header"></div>
+            <div id="playlist-videos" class="results-grid"></div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="goTab('home', this)"><i class="fas fa-home"></i><span data-lang="n_home">الرئيسية</span></div>
+        <div class="nav-item" onclick="goTab('shorts', this)"><i class="fas fa-bolt"></i><span data-lang="n_shorts">Shorts</span></div>
+        <div class="nav-item" onclick="goTab('history', this)"><i class="fas fa-history"></i><span data-lang="n_hist">السجل</span></div>
+        <div class="nav-item" onclick="showSettings()"><i class="fas fa-cog"></i><span data-lang="n_set">الإعدادات</span></div>
+    </nav>
+
+    <!-- Settings Modal -->
+    <div id="setModal" class="modal">
+        <div class="modal-content">
+            <h3 data-lang="n_set">الإعدادات</h3>
+            <div class="row">
+                <span data-lang="dark">الوضع الداكن</span>
+                <input type="checkbox" id="darkCheck" onchange="setTheme()">
+            </div>
+            <div class="row">
+                <span data-lang="lang">اللغة</span>
+                <select id="langBox" onchange="setLang()">
+                    <option value="ar">العربية</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+            <div class="made-by">
+                Made by: <strong>Abdulrahman Al-Aidaroos</strong>
+            </div>
+            <button onclick="showSettings()" style="width:100%; padding:12px; margin-top:15px; border-radius:10px; border:none; background:var(--accent-color); color:white;" data-lang="close">إغلاق</button>
+        </div>
+    </div>
+
+    <script>
+        const SERVERS = [
+            "https://invidious.projectsegfau.lt/api/v1",
+            "https://iv.melmac.space/api/v1",
+            "https://invidious.flokinet.to/api/v1",
+            "https://invidious.privacydev.net/api/v1"
+        ];
+        
+        const CATEGORIES = {
+            gaming: { query: "ألعاب gaming", name: "🎮 ألعاب" },
+            trending: { query: "", name: "🔥 رائج" },
+            entertainment: { query: "ترفيه فيديو", name: "🎬 ترفيه" },
+            music: { query: "موسيقى أغاني", name: "🎵 موسيقى" },
+            technology: { query: "تكنولوجيا برمجة", name: "💻 تكنولوجيا" },
+            suggested: { query: "مقترح", name: "✨ مقترح لك" },
+            news: { query: "أخبار", name: "📰 أخبار" }
+        };
+        
+        let currentServerIndex = 0;
+        let vids = [];
+        let channels = [];
+        let playlists = [];
+        let history = JSON.parse(localStorage.getItem('v_hist')) || [];
+        let currentVideoId = "";
+        let currentVideoUrl = "";
+        let currentVideoTitle = "";
+        let likedVideos = JSON.parse(localStorage.getItem('liked_videos')) || [];
+        let dislikedVideos = JSON.parse(localStorage.getItem('disliked_videos')) || [];
+        let currentCategory = 'gaming';
+        let previousPage = { type: 'home', data: null, category: 'gaming' };
+        let searchResults = null;
+        let playerIframe = null;
+        let currentSearchType = 'all';
+        let currentPage = 1;
+        let hasMoreResults = false;
+        let currentChannelId = null;
+        let currentPlaylistId = null;
+
+        const langMap = {
+            ar: { n_home:"الرئيسية", n_shorts:"Shorts", n_hist:"السجل", n_set:"الإعدادات", dark:"الوضع الداكن", lang:"اللغة", play:"تشغيل", like:"إعجاب", dl:"تحميل", sh:"مشاركة", close:"إغلاق", search:"بحث..." },
+            en: { n_home:"Home", n_shorts:"Shorts", n_hist:"History", n_set:"Settings", dark:"Dark Mode", lang:"Language", play:"Play", like:"Like", dl:"Download", sh:"Share", close:"Close", search:"Search..." }
+        };
+
+        async function fetchSmart(endpoint) {
+            try {
+                const response = await fetch(`${SERVERS[currentServerIndex]}${endpoint}`);
+                if (!response.ok) throw new Error();
+                return await response.json();
+            } catch (e) {
+                console.warn(`الخادم ${currentServerIndex} لا يستجيب، أجرب التالي...`);
+                currentServerIndex++;
+                if (currentServerIndex < SERVERS.length) {
+                    return fetchSmart(endpoint);
+                } else {
+                    currentServerIndex = 0;
+                    return null;
+                }
+            }
+        }
+
+        async function loadVideosByCategory(category = 'gaming') {
+            currentCategory = category;
+            showLoading();
+            document.getElementById('searchTypeTabs').style.display = 'none';
+            document.getElementById('resultsHeader').style.display = 'none';
+            document.getElementById('loadMoreContainer').style.display = 'none';
+            
+            let data = null;
+            
+            if (category === 'trending') {
+                data = await fetchSmart('/trending');
+            } else if (category === 'suggested') {
+                if (history.length > 0) {
+                    const randomHistory = history[Math.floor(Math.random() * history.length)];
+                    data = await fetchSmart(`/search?q=${encodeURIComponent(randomHistory.n)}&type=video`);
+                } else {
+                    data = await fetchSmart('/trending');
+                }
+            } else {
+                data = await fetchSmart(`/search?q=${encodeURIComponent(CATEGORIES[category].query)}&type=video`);
+            }
+            
+            if (data) {
+                vids = processVideos(data);
+                
+                if (category === 'suggested' && history.length === 0) {
+                    vids = vids.sort(() => 0.5 - Math.random()).slice(0, 20);
+                }
+                
+                render(vids, 'main-grid');
+                previousPage = { type: 'category', data: vids, category: category };
+            } else {
+                showEmptyState('تأكد من اتصالك بالانترنت أو حاول إعادة تحميل الصفحة');
+            }
+        }
+
+        function processVideos(data) {
+            return data.map(item => {
+                if(item.type !== "video") return null;
+                return {
+                    id: item.videoId,
+                    n: item.title,
+                    u: `https://www.youtube.com/watch?v=${item.videoId}`,
+                    channel: item.author,
+                    channelId: item.authorId,
+                    views: item.viewCount,
+                    duration: item.lengthSeconds,
+                    published: item.published,
+                    thumb: `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`,
+                    channelThumb: item.authorThumbnails ? item.authorThumbnails[0]?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random` : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random`,
+                    isLiked: likedVideos.includes(item.videoId),
+                    isDisliked: dislikedVideos.includes(item.videoId)
+                };
+            }).filter(x => x);
+        }
+
+        function processSearchResults(data) {
+            const videos = [];
+            const channels = [];
+            const playlists = [];
+            
+            data.forEach(item => {
+                if (item.type === "video") {
+                    videos.push({
+                        type: 'video',
+                        id: item.videoId,
+                        n: item.title,
+                        u: `https://www.youtube.com/watch?v=${item.videoId}`,
+                        channel: item.author,
+                        channelId: item.authorId,
+                        views: item.viewCount,
+                        duration: item.lengthSeconds,
+                        published: item.published,
+                        thumb: `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`,
+                        channelThumb: item.authorThumbnails ? item.authorThumbnails[0]?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random` : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random`
+                    });
+                } else if (item.type === "channel") {
+                    channels.push({
+                        type: 'channel',
+                        id: item.authorId,
+                        n: item.author,
+                        thumb: item.authorThumbnails ? item.authorThumbnails[item.authorThumbnails.length - 1]?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random` : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random`,
+                        videoCount: item.videoCount,
+                        subscriberCount: item.subscriberCount,
+                        description: item.description
+                    });
+                } else if (item.type === "playlist") {
+                    playlists.push({
+                        type: 'playlist',
+                        id: item.playlistId,
+                        n: item.title,
+                        thumb: item.playlistThumbnail || `https://via.placeholder.com/320x180/333333/ffffff?text=قائمة+تشغيل`,
+                        videoCount: item.videoCount,
+                        author: item.author,
+                        authorId: item.authorId
+                    });
+                }
+            });
+            
+            return { videos, channels, playlists };
+        }
+
+        async function searchWithType(query, type = 'video', page = 1) {
+            const endpoint = `/search?q=${encodeURIComponent(query)}&type=${type}&page=${page}`;
+            const data = await fetchSmart(endpoint);
+            
+            if (data && Array.isArray(data)) {
+                hasMoreResults = data.length >= 20;
+                
+                if (type === 'video') {
+                    return { videos: processVideos(data), channels: [], playlists: [] };
+                } else if (type === 'channel') {
+                    const channels = data.filter(item => item.type === "channel").map(item => ({
+                        type: 'channel',
+                        id: item.authorId,
+                        n: item.author,
+                        thumb: item.authorThumbnails ? item.authorThumbnails[item.authorThumbnails.length - 1]?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random` : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random`,
+                        videoCount: item.videoCount,
+                        subscriberCount: item.subscriberCount,
+                        description: item.description
+                    }));
+                    return { videos: [], channels: channels, playlists: [] };
+                } else if (type === 'playlist') {
+                    const playlists = data.filter(item => item.type === "playlist").map(item => ({
+                        type: 'playlist',
+                        id: item.playlistId,
+                        n: item.title,
+                        thumb: item.playlistThumbnail || `https://via.placeholder.com/320x180/333333/ffffff?text=قائمة+تشغيل`,
+                        videoCount: item.videoCount,
+                        author: item.author,
+                        authorId: item.authorId
+                    }));
+                    return { videos: [], channels: [], playlists: playlists };
+                }
+            }
+            
+            return { videos: [], channels: [], playlists: [] };
+        }
+
+        async function doSearch() {
+            const q = document.getElementById('searchInput').value;
+            if(!q) {
+                loadVideosByCategory(currentCategory);
+                return;
+            }
+            
+            currentPage = 1;
+            showLoading();
+            document.getElementById('searchTypeTabs').style.display = 'flex';
+            document.getElementById('resultsHeader').style.display = 'flex';
+            document.getElementById('loadMoreContainer').style.display = 'block';
+            document.getElementById('resultsTitle').innerText = `نتائج البحث عن: "${q}"`;
+            
+            // Search for all types initially
+            const [videosData, channelsData, playlistsData] = await Promise.all([
+                searchWithType(q, 'video', currentPage),
+                searchWithType(q, 'channel', currentPage),
+                searchWithType(q, 'playlist', currentPage)
+            ]);
+            
+            if (videosData || channelsData || playlistsData) {
+                searchResults = {
+                    videos: videosData.videos || [],
+                    channels: channelsData.channels || [],
+                    playlists: playlistsData.playlists || [],
+                    query: q
+                };
+                
+                // Show all results initially
+                const allResults = [
+                    ...searchResults.videos.slice(0, 10),
+                    ...searchResults.channels.slice(0, 5),
+                    ...searchResults.playlists.slice(0, 5)
+                ];
+                
+                if (allResults.length > 0) {
+                    render(allResults, 'main-grid');
+                    updateResultsCount(allResults.length, 'all');
+                    
+                    previousPage = { type: 'search', data: allResults, category: currentCategory };
+                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    
+                    // Update search type tabs
+                    document.querySelectorAll('.search-type-tab').forEach(btn => btn.classList.remove('active'));
+                    document.querySelector('.search-type-tab').classList.add('active');
+                    currentSearchType = 'all';
+                    
+                    // Enable/disable load more button
+                    document.getElementById('loadMoreBtn').disabled = !hasMoreResults;
+                } else {
+                    showEmptyState('لم يتم العثور على نتائج');
+                    document.getElementById('loadMoreContainer').style.display = 'none';
+                }
+            } else {
+                showEmptyState('عذراً، حاول إعادة تحميل الصفحة');
+                document.getElementById('loadMoreContainer').style.display = 'none';
+            }
+        }
+
+        async function loadMoreResults() {
+            if (!searchResults || !searchResults.query) return;
+            
+            currentPage++;
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.innerHTML = 'جاري التحميل...';
+            
+            let newResults = null;
+            
+            if (currentSearchType === 'all') {
+                const [videosData, channelsData, playlistsData] = await Promise.all([
+                    searchWithType(searchResults.query, 'video', currentPage),
+                    searchWithType(searchResults.query, 'channel', currentPage),
+                    searchWithType(searchResults.query, 'playlist', currentPage)
+                ]);
+                
+                if (videosData.videos.length > 0) searchResults.videos.push(...videosData.videos);
+                if (channelsData.channels.length > 0) searchResults.channels.push(...channelsData.channels);
+                if (playlistsData.playlists.length > 0) searchResults.playlists.push(...playlistsData.playlists);
+                
+                newResults = [
+                    ...videosData.videos,
+                    ...channelsData.channels,
+                    ...playlistsData.playlists
+                ];
+            } else {
+                const data = await searchWithType(searchResults.query, currentSearchType, currentPage);
+                
+                if (currentSearchType === 'video') {
+                    searchResults.videos.push(...data.videos);
+                    newResults = data.videos;
+                } else if (currentSearchType === 'channel') {
+                    searchResults.channels.push(...data.channels);
+                    newResults = data.channels;
+                } else if (currentSearchType === 'playlist') {
+                    searchResults.playlists.push(...data.playlists);
+                    newResults = data.playlists;
+                }
+            }
+            
+            if (newResults && newResults.length > 0) {
+                const grid = document.getElementById('main-grid');
+                newResults.forEach(item => {
+                    if (item.type === 'channel') {
+                        renderChannelCard(item, grid);
+                    } else if (item.type === 'playlist') {
+                        renderPlaylistCard(item, grid);
+                    } else {
+                        renderVideoCard(item, grid);
+                    }
+                });
+                
+                updateResultsCount(
+                    currentSearchType === 'all' ? 
+                    searchResults.videos.length + searchResults.channels.length + searchResults.playlists.length :
+                    currentSearchType === 'video' ? searchResults.videos.length :
+                    currentSearchType === 'channel' ? searchResults.channels.length :
+                    searchResults.playlists.length,
+                    currentSearchType
+                );
+            }
+            
+            loadMoreBtn.disabled = !hasMoreResults;
+            loadMoreBtn.innerHTML = 'تحميل المزيد';
+        }
+
+        function changeSearchType(type, element) {
+            document.querySelectorAll('.search-type-tab').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            currentSearchType = type;
+            currentPage = 1;
+            
+            if (searchResults) {
+                let filteredResults = [];
+                
+                if (type === 'all') {
+                    filteredResults = [
+                        ...searchResults.videos.slice(0, 10),
+                        ...searchResults.channels.slice(0, 5),
+                        ...searchResults.playlists.slice(0, 5)
+                    ];
+                } else if (type === 'video') {
+                    filteredResults = searchResults.videos.slice(0, 20);
+                } else if (type === 'channel') {
+                    filteredResults = searchResults.channels.slice(0, 20);
+                } else if (type === 'playlist') {
+                    filteredResults = searchResults.playlists.slice(0, 20);
+                }
+                
+                if (filteredResults.length > 0) {
+                    render(filteredResults, 'main-grid');
+                    updateResultsCount(filteredResults.length, type);
+                    
+                    // Enable/disable load more button
+                    const hasMore = type === 'all' ? 
+                        (searchResults.videos.length > 10 || searchResults.channels.length > 5 || searchResults.playlists.length > 5) :
+                        type === 'video' ? searchResults.videos.length > 20 :
+                        type === 'channel' ? searchResults.channels.length > 20 :
+                        searchResults.playlists.length > 20;
+                    
+                    document.getElementById('loadMoreBtn').disabled = !hasMore;
+                } else {
+                    showEmptyState('لا توجد نتائج من هذا النوع');
+                }
+            }
+        }
+
+        function changeCategory(category, element) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            loadVideosByCategory(category);
+        }
+
+        function render(data, gridId) {
+            const g = document.getElementById(gridId);
+            if (!data || data.length === 0) {
+                g.innerHTML = '<div class="empty-state"><i class="fas fa-video-slash"></i><div>لا توجد فيديوهات في هذه الفئة</div></div>';
+                return;
+            }
+            
+            g.innerHTML = '';
+            data.forEach(v => {
+                if (v.type === 'channel') {
+                    renderChannelCard(v, g);
+                } else if (v.type === 'playlist') {
+                    renderPlaylistCard(v, g);
+                } else {
+                    renderVideoCard(v, g);
+                }
+            });
+        }
+
+        function renderVideoCard(v, container) {
+            const safeTitle = v.n.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const channelName = v.channel || "قناة غير معروفة";
+            
+            container.innerHTML += `
+                <div class="video-card" onclick="play('${v.id}', '${safeTitle}', '${v.u}', '${previousPage.type}')">
+                    <div class="thumb-box">
+                        <img src="${v.thumb}" loading="lazy" onerror="this.src='https://via.placeholder.com/320x180/333333/ffffff?text=صورة+غير+متاحة'">
+                        ${v.duration ? `<div class="video-duration">${formatDuration(v.duration)}</div>` : ''}
+                        <div style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.8); color:white; padding:2px 5px; font-size:10px; border-radius:4px;">YouTube</div>
+                    </div>
+                    <div class="card-info">
+                        <div class="channel-icon">
+                            <img src="${v.channelThumb}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(channelName)}&background=random'">
+                        </div>
+                        <div class="video-details">
+                            <h3>${v.n}</h3>
+                            <div class="channel-name">${channelName}</div>
+                            <div class="video-stats">
+                                ${v.views ? `<span>${formatNumber(v.views)} مشاهدة</span>` : ''}
+                                ${v.published ? `<span>• ${timeAgo(v.published)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderChannelCard(c, container) {
+            container.innerHTML += `
+                <div class="channel-card" onclick="viewChannel('${c.id}')">
+                    <div class="channel-avatar-large">
+                        <img src="${c.thumb}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(c.n)}&background=random'">
+                    </div>
+                    <div class="channel-info">
+                        <h3>${c.n}</h3>
+                        <div class="channel-stats">
+                            ${c.subscriberCount ? `<span>${formatNumber(c.subscriberCount)} مشترك</span>` : ''}
+                            ${c.videoCount ? `<span>• ${c.videoCount} فيديو</span>` : ''}
+                        </div>
+                        ${c.description ? `<div class="channel-description">${c.description.substring(0, 100)}...</div>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        function renderPlaylistCard(p, container) {
+            const safeTitle = p.n.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            container.innerHTML += `
+                <div class="playlist-card" onclick="viewPlaylist('${p.id}')">
+                    <div class="playlist-thumb">
+                        <img src="${p.thumb}" onerror="this.src='https://via.placeholder.com/320x180/333333/ffffff?text=قائمة+تشغيل'">
+                        <div class="playlist-overlay">
+                            <i class="fas fa-list" style="margin-left:5px;"></i>قائمة تشغيل
+                        </div>
+                        ${p.videoCount ? `<div class="playlist-count">${p.videoCount} فيديو</div>` : ''}
+                    </div>
+                    <div class="playlist-info">
+                        <h3>${p.n}</h3>
+                        ${p.author ? `<div class="playlist-author">${p.author}</div>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        function play(id, title, url, fromType = 'home') {
+            currentVideoId = id;
+            currentVideoUrl = url;
+            currentVideoTitle = title;
+            
+            previousPage = { 
+                type: fromType, 
+                data: fromType === 'search' ? searchResults : vids,
+                category: currentCategory
+            };
+            
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('channel-view').style.display = 'none';
+            document.getElementById('playlist-view').style.display = 'none';
+            document.getElementById('player-view').style.display = 'block';
+            
+            const playerContainer = document.getElementById('yt-player-container');
+            playerContainer.innerHTML = `<iframe id="playerIframe" src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+            playerIframe = document.getElementById('playerIframe');
+            
+            document.getElementById('v-title').innerText = title;
+            
+            const videoData = {
+                id: id,
+                n: title,
+                u: url,
+                thumb: `https://img.youtube.com/vi/${id}/mqdefault.jpg`,
+                time: new Date().toISOString(),
+                category: fromType
+            };
+            
+            if(!history.find(h => h.id === id)) {
+                history.unshift(videoData);
+                if (history.length > 50) history.pop();
+                localStorage.setItem('v_hist', JSON.stringify(history));
+            }
+            
+            loadChannelInfo(id);
+            loadRelatedVideos(id, title);
+            updateLikeDislikeButtons();
+            
+            window.scrollTo(0,0);
+        }
+
+        async function viewChannel(channelId) {
+            currentChannelId = channelId;
+            
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('player-view').style.display = 'none';
+            document.getElementById('playlist-view').style.display = 'none';
+            document.getElementById('channel-view').style.display = 'block';
+            
+            showLoading('channel-videos');
+            
+            try {
+                // Fetch channel info
+                const channelData = await fetchSmart(`/channels/${channelId}`);
+                if (channelData) {
+                    const avatarUrl = channelData.authorThumbnails && channelData.authorThumbnails.length > 0 
+                        ? channelData.authorThumbnails[channelData.authorThumbnails.length - 1].url 
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(channelData.author || 'قناة')}&background=random`;
+                    
+                    document.getElementById('channel-header').innerHTML = `
+                        <div class="channel-card" style="cursor: default; margin-bottom: 30px;">
+                            <div class="channel-avatar-large">
+                                <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(channelData.author || 'قناة')}&background=random'">
+                            </div>
+                            <div class="channel-info">
+                                <h3>${channelData.author || "قناة غير معروفة"}</h3>
+                                <div class="channel-stats">
+                                    ${channelData.subCount ? `<span>${formatNumber(channelData.subCount)} مشترك</span>` : ''}
+                                    ${channelData.totalViews ? `<span>• ${formatNumber(channelData.totalViews)} مشاهدة</span>` : ''}
+                                </div>
+                                ${channelData.description ? `<div class="channel-description" style="-webkit-line-clamp: unset;">${channelData.description}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('channel-videos-title').innerText = `فيديوهات ${channelData.author || "القناة"}`;
+                }
+                
+                // Fetch channel videos
+                const videosData = await fetchSmart(`/channels/videos/${channelId}`);
+                if (videosData && Array.isArray(videosData) && videosData.length > 0) {
+                    const videos = videosData.map(item => ({
+                        id: item.videoId,
+                        n: item.title,
+                        u: `https://www.youtube.com/watch?v=${item.videoId}`,
+                        channel: item.author,
+                        channelId: item.authorId,
+                        views: item.viewCount,
+                        duration: item.lengthSeconds,
+                        published: item.published,
+                        thumb: `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`,
+                        channelThumb: item.authorThumbnails ? item.authorThumbnails[0]?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random` : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random`
+                    }));
+                    
+                    render(videos, 'channel-videos');
+                } else {
+                    document.getElementById('channel-videos').innerHTML = 
+                        '<div class="empty-state"><i class="fas fa-video-slash"></i><div>لا توجد فيديوهات في هذه القناة</div></div>';
+                }
+            } catch (error) {
+                console.error('Error loading channel:', error);
+                document.getElementById('channel-videos').innerHTML = 
+                    '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><div>حدث خطأ في تحميل القناة</div></div>';
+            }
+            
+            window.scrollTo(0,0);
+        }
+
+        async function viewPlaylist(playlistId) {
+            currentPlaylistId = playlistId;
+            
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('player-view').style.display = 'none';
+            document.getElementById('channel-view').style.display = 'none';
+            document.getElementById('playlist-view').style.display = 'block';
+            
+            showLoading('playlist-videos');
+            
+            try {
+                // Fetch playlist info
+                const playlistData = await fetchSmart(`/playlists/${playlistId}`);
+                if (playlistData) {
+                    const authorThumb = playlistData.authorThumbnails && playlistData.authorThumbnails.length > 0 
+                        ? playlistData.authorThumbnails[0].url 
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(playlistData.author || 'مستخدم')}&background=random`;
+                    
+                    document.getElementById('playlist-header').innerHTML = `
+                        <div style="margin-bottom: 30px; padding: 20px; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color);">
+                            <h2 style="font-size: 22px; margin-bottom: 10px;">${playlistData.title || "قائمة تشغيل"}</h2>
+                            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                <div class="channel-icon" style="width: 30px; height: 30px; margin-left: 10px;">
+                                    <img src="${authorThumb}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(playlistData.author || 'مستخدم')}&background=random'">
+                                </div>
+                                <div>
+                                    <div style="font-size: 14px; font-weight: 500;">${playlistData.author || "مستخدم"}</div>
+                                    ${playlistData.videoCount ? `<div style="font-size: 12px; color: var(--gray-text);">${playlistData.videoCount} فيديو</div>` : ''}
+                                </div>
+                            </div>
+                            ${playlistData.description ? `<div style="font-size: 14px; color: var(--gray-text); line-height: 1.5;">${playlistData.description}</div>` : ''}
+                        </div>
+                    `;
+                }
+                
+                // Fetch playlist videos
+                if (playlistData && playlistData.videos && Array.isArray(playlistData.videos)) {
+                    const videos = playlistData.videos.map(item => ({
+                        id: item.videoId,
+                        n: item.title,
+                        u: `https://www.youtube.com/watch?v=${item.videoId}`,
+                        channel: item.author,
+                        channelId: item.authorId,
+                        views: item.viewCount,
+                        duration: item.lengthSeconds,
+                        published: item.published,
+                        thumb: `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`,
+                        channelThumb: item.authorThumbnails ? item.authorThumbnails[0]?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random` : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random`
+                    }));
+                    
+                    render(videos, 'playlist-videos');
+                } else {
+                    document.getElementById('playlist-videos').innerHTML = 
+                        '<div class="empty-state"><i class="fas fa-video-slash"></i><div>لا توجد فيديوهات في هذه القائمة</div></div>';
+                }
+            } catch (error) {
+                console.error('Error loading playlist:', error);
+                document.getElementById('playlist-videos').innerHTML = 
+                    '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><div>حدث خطأ في تحميل قائمة التشغيل</div></div>';
+            }
+            
+            window.scrollTo(0,0);
+        }
+
+        function goBackFromChannel() {
+            document.getElementById('channel-view').style.display = 'none';
+            document.getElementById('home-view').style.display = 'block';
+        }
+
+        function goBackFromPlaylist() {
+            document.getElementById('playlist-view').style.display = 'none';
+            document.getElementById('home-view').style.display = 'block';
+        }
+
+        function updateResultsCount(count, type) {
+            const typeNames = {
+                'all': 'نتيجة',
+                'video': 'فيديو',
+                'channel': 'قناة',
+                'playlist': 'قائمة تشغيل'
+            };
+            
+            document.getElementById('resultsCount').innerText = 
+                `${count} ${typeNames[type] || 'نتيجة'}`;
+        }
+
+        function showLoading(target = 'main-grid') {
+            document.getElementById(target).innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div>جاري التحميل...</div>
+                </div>`;
+        }
+
+        function showEmptyState(message, target = 'main-grid') {
+            document.getElementById(target).innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <div>${message}</div>
+                </div>`;
+        }
+
+        function updateLikeDislikeButtons() {
+            const likeBtn = document.getElementById('likeBtn');
+            const dislikeBtn = document.getElementById('dislikeBtn');
+            
+            if (likedVideos.includes(currentVideoId)) {
+                likeBtn.classList.add('active');
+                likeBtn.innerHTML = '<i class="fas fa-thumbs-up"></i><span>معجب</span>';
+                dislikeBtn.classList.remove('active');
+                dislikeBtn.innerHTML = '<i class="fas fa-thumbs-down"></i><span>عدم إعجاب</span>';
+            } else if (dislikedVideos.includes(currentVideoId)) {
+                dislikeBtn.classList.add('active');
+                dislikeBtn.innerHTML = '<i class="fas fa-thumbs-down"></i><span>عدم إعجاب</span>';
+                likeBtn.classList.remove('active');
+                likeBtn.innerHTML = '<i class="fas fa-thumbs-up"></i><span>إعجاب</span>';
+            } else {
+                likeBtn.classList.remove('active');
+                dislikeBtn.classList.remove('active');
+                likeBtn.innerHTML = '<i class="fas fa-thumbs-up"></i><span>إعجاب</span>';
+                dislikeBtn.innerHTML = '<i class="fas fa-thumbs-down"></i><span>عدم إعجاب</span>';
+            }
+        }
+
+        function toggleDislike(button) {
+            if (!currentVideoId) return;
+            
+            const likeIndex = likedVideos.indexOf(currentVideoId);
+            const dislikeIndex = dislikedVideos.indexOf(currentVideoId);
+            
+            if (dislikeIndex === -1) {
+                dislikedVideos.push(currentVideoId);
+                button.classList.add('active');
+                
+                if (likeIndex !== -1) {
+                    likedVideos.splice(likeIndex, 1);
+                    localStorage.setItem('liked_videos', JSON.stringify(likedVideos));
+                }
+            } else {
+                dislikedVideos.splice(dislikeIndex, 1);
+                button.classList.remove('active');
+            }
+            
+            localStorage.setItem('disliked_videos', JSON.stringify(dislikedVideos));
+            updateLikeDislikeButtons();
+        }
+
+        function toggleLike(button) {
+            if (!currentVideoId) return;
+            
+            const likeIndex = likedVideos.indexOf(currentVideoId);
+            const dislikeIndex = dislikedVideos.indexOf(currentVideoId);
+            
+            if (likeIndex === -1) {
+                likedVideos.push(currentVideoId);
+                button.classList.add('active');
+                
+                if (dislikeIndex !== -1) {
+                    dislikedVideos.splice(dislikeIndex, 1);
+                    localStorage.setItem('disliked_videos', JSON.stringify(dislikedVideos));
+                }
+            } else {
+                likedVideos.splice(likeIndex, 1);
+                button.classList.remove('active');
+            }
+            
+            localStorage.setItem('liked_videos', JSON.stringify(likedVideos));
+            updateLikeDislikeButtons();
+        }
+
+        function playNextVideo() {
+            let videosToUse = [];
+            
+            if (previousPage.type === 'search' && previousPage.data) {
+                videosToUse = previousPage.data;
+            } else {
+                videosToUse = vids;
+            }
+            
+            if (videosToUse.length === 0) return;
+            
+            const currentIndex = videosToUse.findIndex(v => v.id === currentVideoId);
+            let nextIndex;
+            
+            if (currentIndex === -1 || currentIndex === videosToUse.length - 1) {
+                nextIndex = 0;
+            } else {
+                nextIndex = currentIndex + 1;
+            }
+            
+            const nextVideo = videosToUse[nextIndex];
+            if (nextVideo) {
+                play(nextVideo.id, nextVideo.n, nextVideo.u, previousPage.type);
+            }
+        }
+
+        async function loadChannelInfo(videoId) {
+            try {
+                const data = await fetchSmart(`/videos/${videoId}`);
+                if (data) {
+                    const channelContainer = document.getElementById('channel-container');
+                    const authorThumb = data.authorThumbnails && data.authorThumbnails.length > 1 
+                        ? data.authorThumbnails[1].url 
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(data.author || 'قناة')}&background=random`;
+                    
+                    channelContainer.innerHTML = `
+                        <div class="channel-info">
+                            <div class="channel-avatar">
+                                <img src="${authorThumb}" alt="${data.author || 'قناة غير معروفة'}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(data.author || 'قناة')}&background=random'">
+                            </div>
+                            <div>
+                                <div class="channel-name">${data.author || "قناة غير معروفة"}</div>
+                                <div class="channel-subscribers">${data.viewCount ? formatNumber(data.viewCount) + ' مشاهدة • ' : ''}${data.published ? timeAgo(data.published) : ''}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading channel info:', error);
+            }
+        }
+
+        async function loadRelatedVideos(videoId, title) {
+            const relatedContainer = document.getElementById('related-videos');
+            relatedContainer.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>جاري التحميل...</div></div>';
+            
+            try {
+                const videoData = await fetchSmart(`/videos/${videoId}`);
+                
+                if (videoData && videoData.recommendedVideos && videoData.recommendedVideos.length > 0) {
+                    const relatedVideos = videoData.recommendedVideos.slice(0, 8).map(item => ({
+                        id: item.videoId,
+                        n: item.title,
+                        u: `https://www.youtube.com/watch?v=${item.videoId}`,
+                        thumb: `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`,
+                        channelThumb: item.authorThumbnails ? item.authorThumbnails[0]?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random` : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random`
+                    }));
+                    
+                    renderRelatedVideos(relatedVideos);
+                } else {
+                    await searchRelatedByTitle(title);
+                }
+            } catch (error) {
+                await searchRelatedByTitle(title);
+            }
+        }
+
+        async function searchRelatedByTitle(title) {
+            const relatedContainer = document.getElementById('related-videos');
+            
+            const keywords = title.split(' ').slice(0, 5).join(' ');
+            const results = await fetchSmart(`/search?q=${encodeURIComponent(keywords)}&type=video`);
+            
+            if (results) {
+                const relatedVideos = results
+                    .filter(item => item.type === "video" && item.videoId !== currentVideoId)
+                    .slice(0, 8)
+                    .map(item => ({
+                        id: item.videoId,
+                        n: item.title,
+                        u: `https://www.youtube.com/watch?v=${item.videoId}`,
+                        thumb: `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`,
+                        channelThumb: item.authorThumbnails ? item.authorThumbnails[0]?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random` : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random`
+                    }));
+                
+                if (relatedVideos.length > 0) {
+                    renderRelatedVideos(relatedVideos);
+                } else {
+                    relatedContainer.innerHTML = '<div class="empty-state"><i class="fas fa-video-slash"></i><div>لا توجد فيديوهات ذات صلة</div></div>';
+                }
+            } else {
+                relatedContainer.innerHTML = '<div class="empty-state"><i class="fas fa-video-slash"></i><div>لا يمكن تحميل الفيديوهات ذات الصلة</div></div>';
+            }
+        }
+
+        function renderRelatedVideos(videos) {
+            const relatedContainer = document.getElementById('related-videos');
+            relatedContainer.innerHTML = '';
+            
+            videos.forEach(v => {
+                const safeTitle = v.n.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                relatedContainer.innerHTML += `
+                    <div class="related-card" onclick="play('${v.id}', '${safeTitle}', '${v.u}', '${previousPage.type}')">
+                        <div class="related-thumb">
+                            <img src="${v.thumb}" loading="lazy" onerror="this.src='https://via.placeholder.com/180x101/333333/ffffff?text=صورة'">
+                        </div>
+                        <div class="related-info">
+                            <div class="related-title">${v.n}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function goBack() {
+            document.getElementById('player-view').style.display = 'none';
+            document.getElementById('home-view').style.display = 'block';
+            document.getElementById('yt-player-container').innerHTML = "";
+            
+            if (previousPage.type === 'search' && previousPage.data) {
+                render(previousPage.data, 'main-grid');
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('searchTypeTabs').style.display = 'flex';
+                document.getElementById('resultsHeader').style.display = 'flex';
+                document.getElementById('loadMoreContainer').style.display = 'block';
+            } else if (previousPage.type === 'category') {
+                loadVideosByCategory(previousPage.category);
+            } else if (previousPage.type === 'history') {
+                render(history, 'main-grid');
+            } else {
+                loadVideosByCategory(currentCategory);
+            }
+        }
+
+        function goTab(t, el) {
+            document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+            el.classList.add('active');
+            
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('player-view').style.display = 'none';
+            document.getElementById('channel-view').style.display = 'none';
+            document.getElementById('playlist-view').style.display = 'none';
+            document.getElementById('yt-player-container').innerHTML = "";
+
+            if(t === 'home') {
+                document.getElementById('home-view').style.display = 'block';
+                loadVideosByCategory(currentCategory);
+                previousPage = { type: 'home', data: null, category: currentCategory };
+            } else if(t === 'history') {
+                document.getElementById('home-view').style.display = 'block';
+                render(history, 'main-grid');
+                previousPage = { type: 'history', data: history, category: 'history' };
+            }
+        }
+
+        function downloadVideo() {
+            if (!currentVideoUrl) {
+                alert('لا يوجد فيديو للتحميل');
+                return;
+            }
+            
+            const downloadUrl = `https://savetube.us/?url=${encodeURIComponent(currentVideoUrl)}`;
+            window.open(downloadUrl, '_blank');
+            
+            alert('سيتم فتح موقع التحميل في نافذة جديدة');
+        }
+
+        function setTheme() {
+            const theme = document.getElementById('darkCheck').checked ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+
+        function setLang() {
+            const l = document.getElementById('langBox').value;
+            document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+            document.querySelectorAll('[data-lang]').forEach(e => {
+                e.innerText = langMap[l][e.getAttribute('data-lang')];
+            });
+            document.getElementById('searchInput').placeholder = langMap[l].search;
+            localStorage.setItem('language', l);
+        }
+
+        function showSettings() {
+            const m = document.getElementById('setModal');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function shV(u) {
+            if(navigator.share) {
+                navigator.share({ title: 'Vidora', url: u });
+            } else {
+                navigator.clipboard.writeText(u);
+                alert("تم نسخ الرابط!");
+            }
+        }
+        function shCurrent() { shV(currentVideoUrl); }
+
+        function formatNumber(num) {
+            if (!num) return "0";
+            if (num >= 1000000000) return (num / 1000000000).toFixed(1) + ' مليار';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + ' مليون';
+            if (num >= 1000) return (num / 1000).toFixed(1) + ' ألف';
+            return num.toString();
+        }
+
+        function timeAgo(timestamp) {
+            if (!timestamp) return "";
+            const date = new Date(timestamp * 1000);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            
+            if (seconds < 60) return 'الآن';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' دقيقة';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' ساعة';
+            if (seconds < 2592000) return Math.floor(seconds / 86400) + ' يوم';
+            if (seconds < 31536000) return Math.floor(seconds / 2592000) + ' شهر';
+            return Math.floor(seconds / 31536000) + ' سنة';
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return "0:00";
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadVideosByCategory('gaming');
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.textContent.includes('ألعاب')) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            document.getElementById('darkCheck').checked = savedTheme === 'dark';
+            
+            const savedLang = localStorage.getItem('language') || 'ar';
+            document.getElementById('langBox').value = savedLang;
+            setLang();
+            
+            likedVideos = JSON.parse(localStorage.getItem('liked_videos')) || [];
+            dislikedVideos = JSON.parse(localStorage.getItem('disliked_videos')) || [];
+        });
+    </script>
+</body>
+</html>
